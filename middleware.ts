@@ -8,16 +8,16 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public routes that don't require auth
-  const publicRoutes = ['/', '/login', '/signup'];
+  const publicRoutes = ['/', '/auth/login', '/auth/signup'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // If no token and trying to access protected route, redirect to login
   if (!token && !isPublicRoute) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
   // If has token and trying to access auth pages, redirect to vault
-  if (token && (pathname === '/login' || pathname === '/signup')) {
+  if (token && (pathname === '/auth/login' || pathname === '/auth/signup')) {
     return NextResponse.redirect(new URL('/vault', request.url));
   }
 
@@ -25,5 +25,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/vault', '/login', '/signup'],
+  matcher: ['/vault', '/auth/login', '/auth/signup'],
 };
