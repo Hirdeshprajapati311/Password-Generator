@@ -59,7 +59,7 @@ const LoginPage = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="border outline-black p-2 rounded"
+          className="border  p-2 rounded"
         />
         <input
           type="password"

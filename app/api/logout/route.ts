@@ -5,7 +5,7 @@ export async function POST() {
   response.cookies.set("token", "", {
     httpOnly: true,
     expires: new Date(0), // Expire immediately
-    path: "/",
+    path: "/auth/login",
   });
   
   return response;
