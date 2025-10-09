@@ -59,7 +59,7 @@ const LoginPage = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border outline-black p-2 rounded"
         />
         <input
           type="password"
@@ -67,7 +67,7 @@ const LoginPage = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border outline-black p-2 rounded"
         />
         <button type="submit" className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
           Login
