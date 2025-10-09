@@ -1,13 +1,6 @@
 // ...existing code...
 import { EncryptedData } from './types/vault';
 
-const getNodeCrypto = () => {
-  if (typeof window === 'undefined') {
-    return require('crypto');
-  }
-  return null;
-};
-
 const isNode = typeof window === 'undefined' && typeof process !== 'undefined' && !!process.versions?.node;
 
 const hexToUint8 = (hex: string) => {
@@ -41,7 +34,8 @@ const validateEncryptedData = (data: unknown): data is EncryptedData => {
 
 export const generateEncryptionKey = (): string => {
   if (isNode) {
-    const cryptoNode = getNodeCrypto();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cryptoNode = require('crypto');
     return cryptoNode.randomBytes(32).toString('hex');
   } else {
     const buf = crypto.getRandomValues(new Uint8Array(32));
@@ -51,7 +45,8 @@ export const generateEncryptionKey = (): string => {
 
 async function deriveRawKeyBytes(password: string, saltHex: string): Promise<Uint8Array> {
   if (isNode) {
-    const cryptoNode = getNodeCrypto();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cryptoNode = require('crypto');
     const derived = cryptoNode.pbkdf2Sync(password, Buffer.from(saltHex, 'hex'), 100000, 32, 'sha256');
     return new Uint8Array(derived);
   } else {
@@ -67,12 +62,14 @@ async function deriveRawKeyBytes(password: string, saltHex: string): Promise<Uin
 }
 
 export const encryptData = async (data: string, userPassword: string): Promise<EncryptedData> => {
-  const saltArr = isNode ? getNodeCrypto().randomBytes(16) : crypto.getRandomValues(new Uint8Array(16));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const saltArr = isNode ? require('crypto').randomBytes(16) : crypto.getRandomValues(new Uint8Array(16));
   const saltHex = uint8ToHex(new Uint8Array(saltArr));
   const keyBytes = await deriveRawKeyBytes(userPassword, saltHex);
 
   if (isNode) {
-    const cryptoNode = getNodeCrypto();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cryptoNode = require('crypto');
     const iv = cryptoNode.randomBytes(16);
     const cipher = cryptoNode.createCipheriv('aes-256-gcm', Buffer.from(keyBytes), iv);
     const encrypted = Buffer.concat([cipher.update(Buffer.from(data, 'utf8')), cipher.final()]);
@@ -136,7 +133,8 @@ export const decryptData = async (encryptedData: EncryptedData, userPassword: st
   const keyBytes = await deriveRawKeyBytes(userPassword, encryptedData.salt);
 
   if (isNode) {
-    const cryptoNode = getNodeCrypto();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cryptoNode = require('crypto');
     const iv = Buffer.from(encryptedData.iv, 'hex');
     const tag = Buffer.from(encryptedData.tag, 'hex');
     const ciphertext = Buffer.from(encryptedData.ciphertext, 'hex');
