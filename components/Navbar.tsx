@@ -31,7 +31,7 @@ const Navbar = () => {
       await fetch("/api/logout", { method: "POST" });
       localStorage.removeItem("vaultKey");
       logout();
-      router.push("/login");
+      router.push("/auth/login");
     }
   };
   return (
