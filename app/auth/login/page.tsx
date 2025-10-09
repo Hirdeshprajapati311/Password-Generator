@@ -50,9 +50,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-red-500 text-white p-4 mb-4 rounded">
-        If this is red, Tailwind is working
-      </div>
+      
       <h1 className="text-3xl font-bold mb-6">Login</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
         <input
