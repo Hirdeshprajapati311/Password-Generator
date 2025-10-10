@@ -2,7 +2,7 @@
 import { decryptData, encryptData } from '@/lib/crypto';
 import { VaultItem } from '@/lib/types/vault';
 import { useVaultStore } from '@/store/useVaultStore';
-import { Edit, Save, X } from 'lucide-react';
+import { Edit, Eye, EyeOff, Save, X } from 'lucide-react';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // Cache for decrypted passwords to avoid re-decryption
@@ -21,6 +21,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
     password: ''
   })
   const [mounted, setMounted] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
 
   // Set mounted state on client
   useEffect(() => {
@@ -225,7 +226,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
         </div>
         <div className="flex gap-2 items-center">
           <button
-            className="px-3 py-2 bg-gray-200 dark:bg-muted rounded min-w-24 hover:bg-gray-300 transition-colors disabled:opacity-50"
+            className="px-3 py-2 bg-gray-200 dark:bg-gray-800 rounded min-w-24 hover:bg-gray-300 transition-colors disabled:opacity-50"
             onClick={() => toggleReveal(item)}
             disabled={isLoading || loading.bulk}
             title={isRevealed ? "Hide password" : "Reveal password"}
@@ -321,14 +322,14 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
       {/* Edit Modal */}
       {editingItem && (
         <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
-          <div className="bg-white dark:bg-muted dark:text-white rounded-xl p-6 w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800  rounded-xl p-6 w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-blue-700">
                 ✏️ Edit: {editingItem.title}
               </h3>
               <button
                 onClick={handleCancelEdit}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-gray-500 hover:text-gray-700  transition-colors"
                 title="Close"
               >
                 <X size={24} />
@@ -338,7 +339,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Title *
                   </label>
                   <input
@@ -346,13 +347,13 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                     placeholder="Enter title"
                     value={editForm.title}
                     onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border dark:text-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
                     Username
                   </label>
                   <input
@@ -365,7 +366,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
                     URL
                   </label>
                   <input
@@ -378,22 +379,31 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
                     Password *
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter password"
-                    value={editForm.password}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, password: e.target.value }))}
-                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-                    required
-                  />
+                  <div className="relative w-full">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter password"
+                      value={editForm.password}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, password: e.target.value }))}
+                      className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 dark:text-black focus:ring-blue-500 focus:border-transparent font-mono pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
                   Notes
                 </label>
                 <textarea

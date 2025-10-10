@@ -1,6 +1,4 @@
 'use client'
-import { useAuthStore } from '@/store/useAuthStore';
-import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -10,8 +8,7 @@ const SignUpPage = () => {
   const [email,setEmail] = useState('')
   const [password, setPassword] = useState('');
   const [error, setError] = useState('')
-  const router = useRouter()
-  const loginStore = useAuthStore()
+ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +30,6 @@ const SignUpPage = () => {
         setError(data.error || "Something went wrong");
         return;
       }
-      loginStore.login(data.userId);
-      router.push("/vault");
       toast.success("Signup successful")
     } catch (err) {
       console.log(err)

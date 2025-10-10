@@ -1,5 +1,4 @@
 'use client'
-import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
@@ -11,7 +10,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('')
   const router = useRouter()
-  const loginStore = useAuthStore();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +36,9 @@ const LoginPage = () => {
         return;
       }
 
-      loginStore.login(data.userId);
-      router.push("/vault");
       toast.success("Login successful")
+      router.push("/vault")
+      router.refresh();
     } catch (err) {
       console.log(err)
       setError("Server error")
@@ -49,9 +48,9 @@ const LoginPage = () => {
 
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-screen dark:bg-muted bg-gray-50">
       
-      <h1 className="text-3xl font-bold mb-6">Login</h1>
+      <h1 className="text-3xl dark:text-white font-bold mb-6">Login</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
         <input
           type="email"

@@ -26,6 +26,7 @@ const VaultPage = () => {
 
   return (
     <div>
+      
       <AddVaultItemForm encryptionKey={encryptionKey} />
       <VaultPannel  encryptionKey={encryptionKey} />
     </div>

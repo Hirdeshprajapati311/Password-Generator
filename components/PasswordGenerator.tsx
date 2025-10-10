@@ -135,7 +135,7 @@ const PasswordGenerator = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 dark:bg-muted  bg-white shadow-md rounded-2xl p-6 text-center">
+    <div className="max-w-md mx-auto mt-10 dark:bg-gray-800  bg-white shadow-md rounded-2xl p-6 text-center">
       <h2 className="text-xl font-bold mb-4">🔐 Password Generator</h2>
 
       <div className="flex flex-col gap-3 text-left">
@@ -217,8 +217,8 @@ const PasswordGenerator = () => {
           }
 
           {isModalOpen && (
-            <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-              <div className="bg-white rounded-xl p-6 w-80 shadow-lg">
+            <div className="fixed inset-0 bg-black/70 dark:bg-black/10 flex justify-center items-center z-50">
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-80 shadow-lg">
                 <h3 className="text-lg font-bold mb-4">Save Password to Vault</h3>
 
                 <form onSubmit={handleSaveToVault} className="flex flex-col gap-3">
@@ -227,7 +227,7 @@ const PasswordGenerator = () => {
                     placeholder="Title"
                     value={vaultTitle}
                     onChange={(e) => setVaultTitle(e.target.value)}
-                    className="border p-2 rounded"
+                    className="border dark:bg-gray-700 p-2 rounded"
                     required
                   />
 
@@ -236,7 +236,7 @@ const PasswordGenerator = () => {
                     placeholder="Username (optional)"
                     value={vaultUsername}
                     onChange={(e) => setVaultUsername(e.target.value)}
-                    className="border p-2 rounded"
+                    className="border dark:bg-gray-700 p-2 rounded"
                   />
 
                   <input
@@ -244,28 +244,28 @@ const PasswordGenerator = () => {
                     placeholder="URL (optional)"
                     value={vaultUrl}
                     onChange={(e) => setVaultUrl(e.target.value)}
-                    className="border p-2 rounded"
+                    className="border dark:bg-gray-700 p-2 rounded"
                   />
 
                   <textarea
                     placeholder="Notes (optional)"
                     value={vaultNotes}
                     onChange={(e) => setVaultNotes(e.target.value)}
-                    className="border p-2 rounded"
+                    className="border dark:bg-gray-700 p-2 rounded"
                   />
 
                   <input
                     type="text"
                     value={password} // pre-filled password
                     readOnly
-                    className="border p-2 rounded font-mono"
+                    className="border dark:bg-gray-700 p-2 rounded font-mono"
                   />
 
                   <div className="flex justify-end gap-2 mt-2">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400"
+                      className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 hover:bg-gray-400"
                     >
                       Cancel
                     </button>

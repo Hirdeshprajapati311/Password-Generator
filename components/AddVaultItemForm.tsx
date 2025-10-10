@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { encryptData } from '@/lib/crypto';
 import { useVaultStore } from '@/store/useVaultStore';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface AddVaultItemFormProps {
   encryptionKey: string;
@@ -14,6 +15,7 @@ export const AddVaultItemForm = ({ encryptionKey }: AddVaultItemFormProps) => {
   const [url, setUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,41 +51,51 @@ export const AddVaultItemForm = ({ encryptionKey }: AddVaultItemFormProps) => {
   };
 
   return (
+    
     <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded space-y-2">
       <h2 className="font-bold text-lg mb-2">Add New Vault Item</h2>
       <input
-        className="w-full border px-2 py-1 rounded"
+        className="w-full dark:bg-gray-800 border px-2 py-1 rounded"
         placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
       />
       <input
-        className="w-full border px-2 py-1 rounded"
+        className="w-full dark:bg-gray-800 border px-2 py-1 rounded"
         placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <input
-        className="w-full border px-2 py-1 rounded"
+        className="w-full dark:bg-gray-800 border px-2 py-1 rounded"
         placeholder="URL"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
       />
       <textarea
-        className="w-full border px-2 py-1 rounded"
+        className="w-full dark:bg-gray-800 border px-2 py-1 rounded"
         placeholder="Notes"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
       />
-      <input
-        type="password"
-        className="w-full border px-2 py-1 rounded"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
+      <div className="relative w-full">
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Enter password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full border dark:bg-gray-800 border-gray-300 p-3 rounded-lg focus:ring-2 dark:text-black focus:ring-blue-500 focus:border-transparent font-mono pr-10"
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+        >
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      </div>
       <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
         Add Item
       </button>
