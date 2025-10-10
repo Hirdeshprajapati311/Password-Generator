@@ -52,7 +52,7 @@ const SignUpPage = () => {
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Create Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required

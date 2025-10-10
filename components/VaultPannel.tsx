@@ -347,7 +347,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                     placeholder="Enter title"
                     value={editForm.title}
                     onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full border dark:text-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -361,7 +361,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                     placeholder="Enter username"
                     value={editForm.username}
                     onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -374,7 +374,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                     placeholder="https://example.com"
                     value={editForm.url}
                     onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
-                    className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border  dark:text-white dark:bg-gray-700  border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -388,7 +388,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                       placeholder="Enter password"
                       value={editForm.password}
                       onChange={(e) => setEditForm(prev => ({ ...prev, password: e.target.value }))}
-                      className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 dark:text-black focus:ring-blue-500 focus:border-transparent font-mono pr-10"
+                      className="w-full border  dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2  focus:ring-blue-500 focus:border-transparent font-mono pr-10"
                       required
                     />
                     <button
@@ -410,7 +410,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
                   placeholder="Add any notes here..."
                   value={editForm.notes}
                   onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
                 />
               </div>
