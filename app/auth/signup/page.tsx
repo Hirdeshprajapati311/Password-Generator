@@ -39,7 +39,7 @@ const SignUpPage = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center dark:bg-black min-h-screen bg-gray-50">
       <h1 className="text-3xl font-bold mb-6">Sign Up</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
         <input
@@ -48,7 +48,7 @@ const SignUpPage = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border text-black dark:bg-gray-800 dark:text-white p-2 rounded"
         />
         <input
           type="password"
@@ -56,7 +56,7 @@ const SignUpPage = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border text-black dark:bg-gray-800 dark:text-white p-2 rounded"
         />
         <button type="submit" className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
           Sign Up
