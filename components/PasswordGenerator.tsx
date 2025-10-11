@@ -1,5 +1,5 @@
 "use client";
-import { encryptData, generateEncryptionKey } from "@/lib/crypto";
+import { encryptData } from "@/lib/crypto";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -88,10 +88,10 @@ const PasswordGenerator = () => {
 
     try {
       // Get or create encryption key
-      let key = localStorage.getItem("vaultKey");
-      if (!key) {
-        key = generateEncryptionKey();
-        localStorage.setItem("vaultKey", key);
+      const key = localStorage.getItem("vaultKey");
+      if (!key ) {
+        toast.error("No encryption key found. Please log in again.");
+        return;
       }
 
       console.log('PasswordGenerator - Saving with key:', {
@@ -128,7 +128,7 @@ const PasswordGenerator = () => {
       setVaultNotes("");
     } catch (err: unknown) {
 
-      const errorMessage = err instanceof Error
+      const errorMessage = err instanceof Error?err.message:String(err)
       console.error("Save to vault error:", errorMessage);
       toast.error(errorMessage || "Error saving password")
     }
@@ -221,7 +221,7 @@ const PasswordGenerator = () => {
               <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-80 shadow-lg">
                 <h3 className="text-lg font-bold mb-4">Save Password to Vault</h3>
 
-                <form onSubmit={handleSaveToVault} className="flex flex-col gap-3">
+                <form noValidate onSubmit={handleSaveToVault} className="flex flex-col gap-3">
                   <input
                     type="text"
                     placeholder="Title"

@@ -4,6 +4,7 @@ export interface User {
   email: string;
   password: string;
   salt: string;
+  encryptedMasterKey: string;
   twoFactorSecret?: string;
   isTwoFactorEnabled: boolean;
   createdAt: Date;

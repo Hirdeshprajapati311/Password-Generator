@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { encryptData } from '@/lib/crypto';
 import { useVaultStore } from '@/store/useVaultStore';
 import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AddVaultItemFormProps {
-  encryptionKey: string;
+  masterKey: string;
 }
 
-export const AddVaultItemForm = ({ encryptionKey }: AddVaultItemFormProps) => {
+export const AddVaultItemForm = ({ masterKey }: AddVaultItemFormProps) => {
   const { fetchVault } = useVaultStore();
 
   const [title, setTitle] = useState('');
@@ -25,7 +26,7 @@ export const AddVaultItemForm = ({ encryptionKey }: AddVaultItemFormProps) => {
     }
 
     // Encrypt password
-    const encrypted = await encryptData(password, encryptionKey);
+    const encrypted = await encryptData(password, masterKey);
 
     // POST to backend
     const res = await fetch('/api/vault', {
@@ -33,6 +34,7 @@ export const AddVaultItemForm = ({ encryptionKey }: AddVaultItemFormProps) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, username, url, notes, encrypted }),
     });
+    toast.success("Vault item added")
 
     if (!res.ok) {
       alert('Failed to add item');
@@ -85,7 +87,7 @@ export const AddVaultItemForm = ({ encryptionKey }: AddVaultItemFormProps) => {
           placeholder="Enter password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border dark:bg-gray-800 border-gray-300 p-3 rounded-lg focus:ring-2 dark:text-black focus:ring-blue-500 focus:border-transparent font-mono pr-10"
+          className="w-full border dark:bg-gray-800 border-gray-300 p-3 rounded-lg focus:ring-2 dark:text-white focus:ring-blue-500 focus:border-transparent font-mono pr-10"
           required
         />
         <button

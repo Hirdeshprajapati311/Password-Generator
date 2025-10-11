@@ -1,12 +1,11 @@
 'use client'
 import { AddVaultItemForm } from '@/components/AddVaultItemForm';
 import VaultPannel from '@/components/VaultPannel';
-import { generateEncryptionKey } from '@/lib/crypto';
 import React, { useEffect, useState } from 'react';
 
 const VaultPage = () => {
 
-  const [encryptionKey, setEncryptionKey] = useState<string | null>(null)
+  const [masterKey, setMasterKey] = useState<string | null>(null)
   
 
 
@@ -14,21 +13,20 @@ const VaultPage = () => {
 
     const key = localStorage.getItem('vaultKey');
     if (key){
-      setEncryptionKey(key);
+      setMasterKey(key);
     } else {
-      const newKey = generateEncryptionKey();
-      localStorage.setItem('vaultKey', newKey);
-      setEncryptionKey(newKey)
+      console.error("No encryption key found");
+      alert("Encryption key missing. Please log in again.");
     }
   }, [])
   
-  if(!encryptionKey) return <p>Loading...</p>
+  if(!masterKey) return <p>Loading...</p>
 
   return (
     <div>
       
-      <AddVaultItemForm encryptionKey={encryptionKey} />
-      <VaultPannel  encryptionKey={encryptionKey} />
+      <AddVaultItemForm masterKey={masterKey} />
+      <VaultPannel  masterKey={masterKey} />
     </div>
   );
 }

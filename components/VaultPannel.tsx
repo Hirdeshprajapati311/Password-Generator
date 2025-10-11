@@ -8,7 +8,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 // Cache for decrypted passwords to avoid re-decryption
 const decryptionCache = new Map<string, string>();
 
-const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
+const VaultPannel = ({ masterKey }: { masterKey: string }) => {
   const { items, fetchVault, deleteItem, updateItem } = useVaultStore()
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState<Record<string, boolean>>({})
@@ -36,7 +36,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
   // Clear cache when encryption key changes
   useEffect(() => {
     decryptionCache.clear();
-  }, [encryptionKey]);
+  }, [masterKey]);
 
   // Clear cache when items change (in case of updates)
   useEffect(() => {
@@ -73,7 +73,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
     // Otherwise, decrypt it
     try {
       setLoading(prev => ({ ...prev, [itemId]: true }))
-      const plaintext = await decryptData(item.encrypted, encryptionKey)
+      const plaintext = await decryptData(item.encrypted, masterKey)
 
       // Cache the decrypted result
       decryptionCache.set(itemId, plaintext);
@@ -84,7 +84,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
     } finally {
       setLoading(prev => ({ ...prev, [itemId]: false }))
     }
-  }, [encryptionKey, revealed]);
+  }, [masterKey, revealed]);
 
   const handleDelete = useCallback((id: string) => {
     if (confirm("Are you sure you want to delete this item?")) {
@@ -102,7 +102,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
       if (decryptionCache.has(item._id)) {
         password = decryptionCache.get(item._id)!;
       } else {
-        password = await decryptData(item.encrypted, encryptionKey);
+        password = await decryptData(item.encrypted, masterKey);
         decryptionCache.set(item._id, password);
       }
 
@@ -118,7 +118,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
       console.error("Failed to decrypt for editing:", err);
       alert('Failed to load password for editing');
     }
-  }, [encryptionKey]);
+  }, [masterKey]);
 
   const handleSaveEdit = useCallback(async () => {
     if (!editingItem) return;
@@ -129,7 +129,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
       // Re-encrypt the password if it was changed
       let encrypted = editingItem.encrypted;
       if (editForm.password !== decryptionCache.get(editingItem._id)) {
-        encrypted = await encryptData(editForm.password, encryptionKey);
+        encrypted = await encryptData(editForm.password, masterKey);
         // Update cache with new password
         decryptionCache.set(editingItem._id, editForm.password);
       }
@@ -150,7 +150,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
     } finally {
       setLoading(prev => ({ ...prev, [editingItem._id]: false }));
     }
-  }, [editingItem, editForm, encryptionKey, updateItem]);
+  }, [editingItem, editForm, masterKey, updateItem]);
 
   const handleCancelEdit = useCallback(() => {
     setEditingItem(null);
@@ -178,7 +178,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
           await Promise.all(
             batch.map(async (item) => {
               try {
-                const plaintext = await decryptData(item.encrypted, encryptionKey);
+                const plaintext = await decryptData(item.encrypted, masterKey);
                 decryptionCache.set(item._id, plaintext);
               } catch (err) {
                 console.error(`Failed to decrypt ${item.title}:`, err);
@@ -202,7 +202,7 @@ const VaultPannel = ({ encryptionKey }: { encryptionKey: string }) => {
         setLoading(prev => ({ ...prev, bulk: false }));
       }
     }
-  }, [items, revealed, encryptionKey]);
+  }, [items, revealed, masterKey]);
 
   // Memoized item rendering for better performance
   const renderItem = useCallback((item: VaultItem) => {

@@ -6,28 +6,52 @@ import { signToken } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    console.log("Auth request received");
     await connectDB();
-    const { email, password, action } = await req.json();
+    console.log("Connected to database");
+    const { email, password, action, encryptedMasterKey } = await req.json();
+
+    console.log("📦 Request body:", { 
+      email , 
+      action,
+      password,
+      encryptedMasterKey 
+    });
 
     if (!email || !password || !action) {
+      console.log("Missing required fields");
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     if (action === "signup") {
+      console.log("Signup attempt for", email);
       const existing = await User.findOne({ email });
       if (existing) {
-        return NextResponse.json({ error: "User already exists" }, { status: 400 });
+        console.log("User already exists");
+        return NextResponse.json({ok:false, error: "User already exists" }, { status: 400 });
       }
+
+      if (!encryptedMasterKey) {
+        console.log("Missing encrypted master key");
+        return NextResponse.json({ok:false, error: "Missing encrypted master key" }, { status: 400 });
+      }
+
+      console.log("Generating password hash...");
+      
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(password, salt);
+
 
       const user = await User.create({
         email,
         password: hash,
         salt,
+        encryptedMasterKey:JSON.stringify(encryptedMasterKey)
       });
+      console.log("User created with ID:", user._id);
 
       const token = signToken(user._id.toString());
+
       const res = NextResponse.json({ success: true, userId: user._id });
 
       res.cookies.set("token", token, {
@@ -38,6 +62,7 @@ export async function POST(req: Request) {
 
       
       })
+      
       return res; 
     }
     if (action === "login") {
@@ -54,7 +79,7 @@ export async function POST(req: Request) {
       }
 
       const token = signToken(user._id.toString());
-      const res = NextResponse.json({ success: true, userId: user._id });
+      const res = NextResponse.json({ success: true, userId: user._id, encryptedMasterKey: user.encryptedMasterKey });
 
       res.cookies.set("token", token, {
         httpOnly: true,
@@ -67,7 +92,8 @@ export async function POST(req: Request) {
     }
     
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch {
+  } catch (error) {
+    console.error("Auth API Error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

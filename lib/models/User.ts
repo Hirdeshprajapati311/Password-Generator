@@ -19,6 +19,10 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
+  encryptedMasterKey: {
+    type: String,
+    required:[true,"Encrypted master key is required"]
+  },
   twoFactorSecret: {
     type: String,
     default: null

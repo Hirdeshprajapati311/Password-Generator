@@ -1,36 +1,75 @@
 'use client'
+import { deriveEncryptionKey, encryptData, generateEncryptionKey } from '@/lib/crypto';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 const SignUpPage = () => {
 
 
-  const [email,setEmail] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('');
   const [error, setError] = useState('')
- 
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    try{
+    try {
+      console.log("Generating permanent encryption key");
+      
+      const permanentEncryptionKey = generateEncryptionKey();
+      console.log("Permanent key generated:", permanentEncryptionKey.substring(0, 20) + "...");
+      
+      console.log("Encrypting master key with password...");
+      
+      
+      
+
+      const encryptedMasterKey = await encryptData(permanentEncryptionKey, password)
+      console.log("Master key encrypted",encryptedMasterKey);
+
+
+      console.log("Deriving salt from password...")
+      const { salt } = await deriveEncryptionKey(password);
+      console.log("Salt derived:", salt.substring(0, 10) + "...")
+      
+      console.log("Sending to API...", {
+        email,
+        passwordLength:password.length,
+        encryptedMasterKeyType:typeof encryptedMasterKey,
+        encryptedMasterKey:encryptedMasterKey
+      })
+
+      const requestBody = {
+        email,
+        password,
+        action: "signup",
+        encryptedMasterKey: encryptedMasterKey, // Don't stringify it!
+      };
+
+      console.log("📦 Request body:", requestBody);
+
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email,
-          password,
-          action:"signup"
-        }),
+        body: JSON.stringify(requestBody),
       })
+      console.log("API Response status",res.status);
+      
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Something went wrong");
+      console.log("API Response data:",data);
+      
+      if (res.ok && data.success) {
+        localStorage.setItem('vaultKey', permanentEncryptionKey);
+        toast.success("Signup successful");
+        window.location.href = "/vault"
+      } else {
+        setError(data.error || "Signup failed");
+        toast.error(data.error || "Signup failed");
         return;
       }
-      toast.success("Signup successful")
     } catch (err) {
       console.log(err)
       setError("Server error")

@@ -1,4 +1,4 @@
-// ...existing code...
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { EncryptedData } from './types/vault';
 
 const isNode = typeof window === 'undefined' && typeof process !== 'undefined' && !!process.versions?.node;
@@ -14,27 +14,41 @@ const uint8ToHex = (u: Uint8Array) => Array.from(u).map(b => b.toString(16).padS
 
 // Add this validation function
 const validateEncryptedData = (data: unknown): data is EncryptedData => {
-
   if (!data || typeof data !== "object") return false;
-  const encrypted = data as EncryptedData
-  return (
-    data &&
+  const encrypted = data as EncryptedData;
+  
+  const isValid = (
+    encrypted &&
     typeof encrypted.ciphertext === 'string' &&
     typeof encrypted.iv === 'string' &&
     typeof encrypted.salt === 'string' &&
     typeof encrypted.tag === 'string' &&
     encrypted.algorithm === 'aes-256-gcm' &&
     encrypted.ciphertext.length > 0 &&
-    encrypted.iv.length === 32 && // 16 bytes in hex
-    encrypted.salt.length === 32 && // 16 bytes in hex
-    encrypted.tag.length === 32 // 16 bytes in hex
+    encrypted.iv.length > 0 &&
+    encrypted.salt.length > 0 &&
+    encrypted.tag.length > 0
   );
-};
 
+  if (!isValid) {
+    console.log("❌ Encrypted data validation failed:", {
+      hasCiphertext: !!encrypted.ciphertext,
+      ciphertextLength: encrypted.ciphertext?.length,
+      hasIv: !!encrypted.iv,
+      ivLength: encrypted.iv?.length,
+      hasSalt: !!encrypted.salt,
+      saltLength: encrypted.salt?.length,
+      hasTag: !!encrypted.tag,
+      tagLength: encrypted.tag?.length,
+      algorithm: encrypted.algorithm
+    });
+  }
+
+  return isValid;
+};
 
 export const generateEncryptionKey = (): string => {
   if (isNode) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const cryptoNode = require('crypto');
     return cryptoNode.randomBytes(32).toString('hex');
   } else {
@@ -43,9 +57,23 @@ export const generateEncryptionKey = (): string => {
   }
 };
 
+export const deriveEncryptionKey = async (password: string, salt?: string): Promise<{ key: string; salt: string }> => {
+
+    
+  const saltHex = salt || uint8ToHex(isNode 
+    ? require('crypto').randomBytes(16) 
+    : crypto.getRandomValues(new Uint8Array(16))
+  );
+  
+  const keyBytes = await deriveRawKeyBytes(password, saltHex);
+  const keyHex = uint8ToHex(keyBytes);
+  
+  return { key: keyHex, salt: saltHex };
+};
+
+
 async function deriveRawKeyBytes(password: string, saltHex: string): Promise<Uint8Array> {
   if (isNode) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const cryptoNode = require('crypto');
     const derived = cryptoNode.pbkdf2Sync(password, Buffer.from(saltHex, 'hex'), 100000, 32, 'sha256');
     return new Uint8Array(derived);
@@ -61,14 +89,12 @@ async function deriveRawKeyBytes(password: string, saltHex: string): Promise<Uin
   }
 }
 
-export const encryptData = async (data: string, userPassword: string): Promise<EncryptedData> => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const saltArr = isNode ? require('crypto').randomBytes(16) : crypto.getRandomValues(new Uint8Array(16));
-  const saltHex = uint8ToHex(new Uint8Array(saltArr));
+export const encryptData = async (data: string, userPassword: string,salt?:string): Promise<EncryptedData> => {
+  const saltHex = salt || uint8ToHex(isNode ? require('crypto').randomBytes(16) : crypto.getRandomValues(new Uint8Array(16)));
+ 
   const keyBytes = await deriveRawKeyBytes(userPassword, saltHex);
 
   if (isNode) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const cryptoNode = require('crypto');
     const iv = cryptoNode.randomBytes(16);
     const cipher = cryptoNode.createCipheriv('aes-256-gcm', Buffer.from(keyBytes), iv);
@@ -133,7 +159,6 @@ export const decryptData = async (encryptedData: EncryptedData, userPassword: st
   const keyBytes = await deriveRawKeyBytes(userPassword, encryptedData.salt);
 
   if (isNode) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const cryptoNode = require('crypto');
     const iv = Buffer.from(encryptedData.iv, 'hex');
     const tag = Buffer.from(encryptedData.tag, 'hex');
