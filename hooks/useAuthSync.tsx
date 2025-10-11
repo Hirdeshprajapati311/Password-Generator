@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect } from "react";
 
 export const useAuthSync = () => {
-  const { setUserId, setIsLoading } = useAuthStore();
+  const { setUserId, setIsLoading,setUserEmail } = useAuthStore();
 
   useEffect(() => {
     let mounted = true;
@@ -19,12 +19,15 @@ export const useAuthSync = () => {
         if (res.ok) {
           const data = await res.json();
           setUserId(data.userId);
+          setUserEmail(data.email);
         } else {
           setUserId(null);
+          setUserEmail(null);
         }
       } catch (err) {
         if (mounted) {
           setUserId(null);
+          setUserEmail(null);
         }
       } finally {
         if (mounted) {
@@ -38,5 +41,5 @@ export const useAuthSync = () => {
     return () => {
       mounted = false;
     };
-  }, [setUserId, setIsLoading]);
+  }, [setUserId, setIsLoading, setUserEmail]);
 }

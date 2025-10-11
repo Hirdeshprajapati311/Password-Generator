@@ -4,15 +4,24 @@ import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
+// Import necessary shadcn components and icons
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { KeyRound, LogIn, Mail, Lock as LockIcon, Loader2 } from 'lucide-react'; // Renamed Lock to LockIcon to avoid conflict
+
 const LoginPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('');
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true); // Start loading
 
     try {
       console.log("🔐 Attempting login for:", email);
@@ -56,37 +65,86 @@ const LoginPage = () => {
       console.error("❌ Login error:", err);
       setError("Server error");
       toast.error("Unable to login");
+    } finally {
+      setIsLoading(false); // Stop loading regardless of outcome
     }
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen dark:bg-black bg-gray-50">
-      <h1 className="text-3xl dark:text-white font-bold mb-6">Login</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-80">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="border text-black dark:bg-gray-800 dark:text-white p-2 rounded"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="border text-black dark:bg-gray-800 dark:text-white outline-black p-2 rounded"
-        />
-        <button type="submit" className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          Login
-        </button>
-        {error && <p className="text-red-500">{error}</p>}
-      </form>
-      <p className="mt-4">
-        Don&apos;t have an account? <a href="/auth/signup" className="text-blue-600">Sign Up</a>
-      </p>
+    // UPDATED: Added a subtle background texture for the entire page
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 p-4">
+
+      {/* UPDATED: Use Card component for a clean, contained form */}
+      <Card className="w-full max-w-sm shadow-2xl border border-primary/20 bg-card/80 backdrop-blur-md">
+        <CardHeader className="space-y-1 text-center">
+          <KeyRound className="h-10 w-10 text-primary mx-auto mb-2" />
+          <CardTitle className="text-2xl">Vault Login</CardTitle>
+          <CardDescription>
+            Enter your credentials to securely access your password vault.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid gap-4">
+
+            {/* Email Field */}
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="pl-10" // Space for the icon
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <LockIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Master Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pl-10" // Space for the icon
+                />
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && <p className="text-sm text-center font-medium text-red-500">{error}</p>}
+
+            {/* Submit Button */}
+            <Button type="submit" className="w-full mt-2 h-10" disabled={isLoading}>
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogIn className="mr-2 h-4 w-4" />
+              )}
+              {isLoading ? "Logging In..." : "Login"}
+            </Button>
+          </form>
+
+          {/* Sign Up Link */}
+          <div className="mt-6 text-center text-sm">
+            Don&apos;t have an account?{' '}
+            <a href="/auth/signup" className="text-primary hover:underline font-medium">
+              Sign Up
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+
     </div>
   );
 }

@@ -2,8 +2,16 @@
 import { decryptData, encryptData } from '@/lib/crypto';
 import { VaultItem } from '@/lib/types/vault';
 import { useVaultStore } from '@/store/useVaultStore';
-import { Edit, Eye, EyeOff, Save, X } from 'lucide-react';
+import { Edit, Eye, EyeOff, Save, X, Loader2, KeyRound, Copy, Trash2, Shield, User, Link, FileText, Bookmark } from 'lucide-react';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Cache for decrypted passwords to avoid re-decryption
 const decryptionCache = new Map<string, string>();
@@ -21,7 +29,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
     password: ''
   })
   const [mounted, setMounted] = useState(false)
-  const [showPassword, setShowPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false); // Renamed state to avoid conflict with `renderItem`
 
   // Set mounted state on client
   useEffect(() => {
@@ -56,6 +64,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
     }
   }, [fetchVault, mounted])
 
+  // --- LOGIC PRESERVED: toggleReveal ---
   const toggleReveal = useCallback(async (item: VaultItem) => {
     const itemId = item._id;
 
@@ -78,30 +87,45 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
       // Cache the decrypted result
       decryptionCache.set(itemId, plaintext);
       setRevealed(prev => ({ ...prev, [itemId]: true }))
+      toast.info(`Password for "${item.title}" revealed.`)
     } catch (err) {
       console.error("Decryption failed", err);
-      alert('Failed to decrypt password. Please check your encryption key.')
+      toast.error('Failed to decrypt password. Check encryption key.');
     } finally {
       setLoading(prev => ({ ...prev, [itemId]: false }))
     }
   }, [masterKey, revealed]);
 
-  const handleDelete = useCallback((id: string) => {
-    if (confirm("Are you sure you want to delete this item?")) {
+  // Function to copy decrypted password to clipboard
+  const copyToClipboard = (id: string, title: string) => {
+    const password = decryptionCache.get(id);
+    if (password) {
+      navigator.clipboard.writeText(password);
+      toast.success(`Password for "${title}" copied to clipboard!`);
+    } else {
+      toast.error("Password not decrypted yet. Please reveal it first.");
+    }
+  };
+
+
+  const handleDelete = useCallback((id: string, title: string) => {
+    if (confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
       // Clear from cache when deleting
       decryptionCache.delete(id);
       deleteItem(id);
+      toast.success(`Item "${title}" deleted.`);
     }
   }, [deleteItem]);
 
-  // Edit functionality
   const handleEdit = useCallback(async (item: VaultItem) => {
+    setEditingItem(null); // Close any existing edit form before processing new one
     try {
       // Decrypt the password for editing
       let password = '';
       if (decryptionCache.has(item._id)) {
         password = decryptionCache.get(item._id)!;
       } else {
+        setLoading(prev => ({ ...prev, [item._id]: true }));
         password = await decryptData(item.encrypted, masterKey);
         decryptionCache.set(item._id, password);
       }
@@ -114,9 +138,12 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
         notes: item.notes || '',
         password: password
       });
+      setShowEditPassword(false); // Reset password visibility for modal
+      setLoading(prev => ({ ...prev, [item._id]: false }));
     } catch (err) {
       console.error("Failed to decrypt for editing:", err);
-      alert('Failed to load password for editing');
+      toast.error('Failed to load password for editing.');
+      setLoading(prev => ({ ...prev, [item._id]: false }));
     }
   }, [masterKey]);
 
@@ -142,11 +169,12 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
         encrypted
       });
 
+      toast.success(`Item "${editingItem.title}" updated successfully.`);
       setEditingItem(null);
       setEditForm({ title: '', username: '', url: '', notes: '', password: '' });
     } catch (err) {
       console.error("Failed to update item:", err);
-      alert('Failed to update item');
+      toast.error('Failed to update item.');
     } finally {
       setLoading(prev => ({ ...prev, [editingItem._id]: false }));
     }
@@ -157,16 +185,17 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
     setEditForm({ title: '', username: '', url: '', notes: '', password: '' });
   }, []);
 
-  // Batch reveal/hide all passwords
   const toggleRevealAll = useCallback(async () => {
     const someRevealed = Object.values(revealed).some(Boolean);
 
     if (someRevealed) {
       // Hide all
       setRevealed({});
+      toast.info("All passwords hidden.");
     } else {
       // Show all - decrypt only what's not in cache
       setLoading(prev => ({ ...prev, bulk: true }));
+      toast.loading("Decrypting all passwords...", { id: 'bulk-decrypt' });
 
       try {
         const itemsToDecrypt = items.filter(item => !decryptionCache.has(item._id));
@@ -195,245 +224,264 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
         }, {} as Record<string, boolean>);
 
         setRevealed(allRevealed);
+        toast.success("All passwords revealed!", { id: 'bulk-decrypt' });
+
       } catch (err) {
         console.error('Bulk decryption failed:', err);
-        alert('Failed to decrypt some passwords');
+        toast.error('Failed to decrypt some passwords.', { id: 'bulk-decrypt' });
       } finally {
         setLoading(prev => ({ ...prev, bulk: false }));
       }
     }
   }, [items, revealed, masterKey]);
 
-  // Memoized item rendering for better performance
   const renderItem = useCallback((item: VaultItem) => {
     const isRevealed = revealed[item._id];
     const isLoading = loading[item._id];
     const cachedPassword = decryptionCache.get(item._id);
 
     return (
-      <div key={item._id} className="border p-4 mb-2 rounded flex justify-between items-center">
-        <div className="flex-1">
-          <h2 className="font-semibold text-lg">{item.title}</h2>
-          {item.username && <p className="text-gray-600">👤 {item.username}</p>}
+      <Card key={item._id} className="shadow-md transition-shadow hover:shadow-lg dark:border-gray-700">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xl font-bold flex items-center gap-2">
+            <Bookmark className="h-5 w-5 text-primary" /> {item.title}
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleEdit(item)}
+              disabled={loading.bulk}
+              title="Edit item"
+            >
+              <Edit size={16} />
+            </Button>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => handleDelete(item._id, item.title)}
+              title="Delete item"
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {item.username && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <User className="mr-2 h-4 w-4" />
+              <span className="font-medium">Username:</span>
+              <span className="ml-2 truncate">{item.username}</span>
+            </div>
+          )}
           {item.url && (
-            <p className="text-blue-600 truncate max-w-md">
-              🔗 <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Link className="mr-2 h-4 w-4" />
+              <span className="font-medium">URL:</span>
+              <a href={item.url} target="_blank" rel="noopener noreferrer" className="ml-2 truncate hover:underline text-blue-500 dark:text-blue-400">
                 {item.url}
               </a>
-            </p>
+            </div>
           )}
-          {item.notes && <p className="text-gray-500 text-sm mt-1">📝 {item.notes}</p>}
-        </div>
-        <div className="flex gap-2 items-center">
-          <button
-            className="px-3 py-2 bg-gray-200 dark:bg-gray-800 rounded min-w-24 hover:bg-gray-300 transition-colors disabled:opacity-50"
-            onClick={() => toggleReveal(item)}
-            disabled={isLoading || loading.bulk}
-            title={isRevealed ? "Hide password" : "Reveal password"}
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center">
-                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-1"></div>
-                ...
-              </span>
-            ) : isRevealed ? (
-              <span className="font-mono text-sm">{cachedPassword}</span>
-            ) : (
-              '••••••'
-            )}
-          </button>
-          <button
-            className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex items-center gap-2"
-            onClick={() => handleEdit(item)}
-            disabled={loading.bulk}
-            title="Edit item"
-          >
-            <Edit size={16} /> Edit
-          </button>
-          <button
-            className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-            onClick={() => handleDelete(item._id)}
-            title="Delete item"
-          >
-            🗑️ Delete
-          </button>
-        </div>
-      </div>
+          {item.notes && (
+            <div className="flex items-start text-sm text-muted-foreground pt-1">
+              <FileText className="mt-0.5 mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="font-medium">Notes:</span>
+              <p className="ml-2 text-sm max-h-12 overflow-hidden truncate whitespace-normal">{item.notes}</p>
+            </div>
+          )}
+          <Separator />
+          {/* Password Section */}
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              <span className="font-semibold text-lg">Password:</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => toggleReveal(item)}
+                disabled={isLoading || loading.bulk}
+                className="min-w-32 font-mono text-base tracking-widest"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isRevealed ? (
+                  <span className="text-primary dark:text-white truncate">{cachedPassword}</span>
+                ) : (
+                  '••••••••'
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => copyToClipboard(item._id, item.title)}
+                disabled={!isRevealed || !cachedPassword || cachedPassword === 'Decryption Error'}
+                title="Copy Password"
+              >
+                <Copy size={16} />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }, [toggleReveal, handleDelete, handleEdit, revealed, loading]);
 
   // Show loading state until component is mounted
   if (!mounted) {
     return (
-      <div className="p-4 max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">🔐 Your Vault</h1>
-        </div>
-        <div className="text-center text-gray-500 mt-10">
-          <p className="text-lg font-medium">Loading vault...</p>
-        </div>
+      <div className="flex justify-center items-center h-48">
+        <Loader2 className="h-6 w-6 animate-spin mr-2 text-primary" />
+        <p className="text-lg text-muted-foreground">Preparing vault panel...</p>
       </div>
     )
   }
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">🔐 Your Vault</h1>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center pb-2">
+        <div className="text-sm text-muted-foreground">
+          Showing {items.length} items • {revealedItems.length} revealed • {decryptionCache.size} cached
+          {editingItem && <span className="ml-2 text-primary font-medium">• Editing mode active</span>}
+        </div>
+
         {items.length > 0 && (
-          <button
+          <Button
             onClick={toggleRevealAll}
             disabled={loading.bulk || editingItem !== null}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-50"
+            variant={Object.values(revealed).some(Boolean) ? "outline" : "default"}
           >
             {loading.bulk ? (
-              <span className="flex items-center">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Processing...
-              </span>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : Object.values(revealed).some(Boolean) ? (
-              '👁️ Hide All'
+              <EyeOff className="h-4 w-4 mr-2" />
             ) : (
-              '👁️ Reveal All'
+              <Eye className="h-4 w-4 mr-2" />
             )}
-          </button>
+            {loading.bulk ? 'Processing...' : Object.values(revealed).some(Boolean) ? 'Hide All' : 'Reveal All'}
+          </Button>
         )}
       </div>
 
+      {/* Vault List */}
       {items.length === 0 ? (
-        <div className="text-center text-gray-500 mt-10">
-          <p className="text-lg font-medium">🔒 No items in your vault yet.</p>
-          <p className="text-sm text-gray-400 mt-1">
-            Add your first password, note, or credential to get started!
-          </p>
-        </div>
+        <Card className="shadow-lg border-dashed border-2 dark:border-gray-700">
+          <CardContent className="text-center p-12 space-y-3">
+            <Shield className="h-10 w-10 text-muted-foreground mx-auto" />
+            <p className="text-lg font-medium text-muted-foreground">No items in your vault yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Use the form on the left to add your first secret credential.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <>
-          <div className="mb-4 text-sm text-gray-600">
-            Showing {items.length} items • {revealedItems.length} revealed • {decryptionCache.size} cached
-            {editingItem && <span className="ml-2 text-blue-600">• Editing mode active</span>}
-          </div>
-          <div className="space-y-3">
-            {items.map(renderItem)}
-          </div>
-        </>
+        <div className="space-y-4">
+          {items.map(renderItem)}
+        </div>
       )}
 
-      {/* Edit Modal */}
-      {editingItem && (
-        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800  rounded-xl p-6 w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-blue-700">
-                ✏️ Edit: {editingItem.title}
-              </h3>
-              <button
-                onClick={handleCancelEdit}
-                className="text-gray-500 hover:text-gray-700  transition-colors"
-                title="Close"
-              >
-                <X size={24} />
-              </button>
-            </div>
+      {/* Edit Modal (Dialog Component) */}
+      <Dialog  open={editingItem !== null} onOpenChange={handleCancelEdit}>
+        <DialogContent className="bg-white dark:bg-gray-900  sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Edit className="h-5 w-5" /> Edit: {editingItem?.title}
+            </DialogTitle>
+            <DialogDescription>
+              Update the details and re-encrypt the item with your master key.
+            </DialogDescription>
+          </DialogHeader>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter title"
-                    value={editForm.title}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full border dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter username"
-                    value={editForm.username}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                    className="w-full border dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
-                    URL
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://example.com"
-                    value={editForm.url}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
-                    className="w-full border  dark:text-white dark:bg-gray-700  border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
-                    Password *
-                  </label>
-                  <div className="relative w-full">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter password"
-                      value={editForm.password}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, password: e.target.value }))}
-                      className="w-full border  dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2  focus:ring-blue-500 focus:border-transparent font-mono pr-10"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                </div>
+          <div className="grid gap-4 py-4">
+            {/* Title & Username */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="edit-title">Title *</Label>
+                <Input
+                  id="edit-title"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                  required
+                />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium dark:text-white text-gray-700 mb-1">
-                  Notes
-                </label>
-                <textarea
-                  placeholder="Add any notes here..."
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full border dark:text-white dark:bg-gray-700 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
+              <div className="space-y-1">
+                <Label htmlFor="edit-username">Username</Label>
+                <Input
+                  id="edit-username"
+                  value={editForm.username}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
                 />
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-gray-200">
-              <button
-                onClick={handleCancelEdit}
-                className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2 font-medium"
-              >
-                <X size={18} /> Cancel
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                disabled={loading[editingItem._id] || !editForm.title || !editForm.password}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2 font-medium"
-              >
-                <Save size={18} /> {loading[editingItem._id] ? 'Saving...' : 'Save Changes'}
-              </button>
+            {/* URL */}
+            <div className="space-y-1">
+              <Label htmlFor="edit-url">URL</Label>
+              <Input
+                id="edit-url"
+                type="url"
+                value={editForm.url}
+                onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1">
+              <Label htmlFor="edit-password">Password *</Label>
+              <div className="relative">
+                <Input
+                  id="edit-password"
+                  type={showEditPassword ? "text" : "password"}
+                  value={editForm.password}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, password: e.target.value }))}
+                  className="font-mono pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowEditPassword((prev) => !prev)}
+                  className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:bg-transparent"
+                >
+                  {showEditPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </Button>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-1">
+              <Label htmlFor="edit-notes">Notes</Label>
+              <Textarea
+                id="edit-notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                rows={3}
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelEdit}>
+              <X size={18} className="mr-2" /> Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={loading[editingItem?._id || ''] || !editForm.title || !editForm.password}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {loading[editingItem?._id || ''] ? (
+                <Loader2 size={18} className="mr-2 animate-spin" />
+              ) : (
+                <Save size={18} className="mr-2" />
+              )}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

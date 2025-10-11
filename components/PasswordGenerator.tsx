@@ -1,9 +1,20 @@
-"use client";
+'use client'
 import { encryptData } from "@/lib/crypto";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Wand2, Copy, Save, X, Lock } from "lucide-react";
+
 
 const PasswordGenerator = () => {
+  // --- LOGIC PRESERVED: State declarations ---
   const [length, setLength] = useState(12);
   const [includeUppercase, setIncludeUppercase] = useState(true);
   const [includeLowercase, setIncludeLowercase] = useState(true);
@@ -17,6 +28,7 @@ const PasswordGenerator = () => {
   const [vaultUsername, setVaultUsername] = useState("");
   const [vaultUrl, setVaultUrl] = useState("");
   const [vaultNotes, setVaultNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const clearClipboardTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -28,7 +40,7 @@ const PasswordGenerator = () => {
     };
   }, []);
 
-  const generatePassword = () => {
+  const generatePassword = useCallback(() => {
     let charset = "";
     if (includeUppercase) charset += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     if (includeLowercase) charset += "abcdefghijklmnopqrstuvwxyz";
@@ -36,7 +48,7 @@ const PasswordGenerator = () => {
     if (includeSymbols) charset += "!@#$%^&*()_+[]{}<>?,.";
 
     if (!charset) {
-      alert("Please select at least one option!");
+      toast.error("Please select at least one character set option!");
       return;
     }
 
@@ -47,7 +59,13 @@ const PasswordGenerator = () => {
     }
 
     setPassword(newPassword);
-  };
+  }, [length, includeUppercase, includeLowercase, includeNumbers, includeSymbols]);
+
+  // Generate a password on first load
+  useEffect(() => {
+    generatePassword();
+  }, [generatePassword]);
+
 
   const clearClipboard = async () => {
     try {
@@ -73,7 +91,7 @@ const PasswordGenerator = () => {
         clearClipboardTimeoutRef.current = null;
       }, 15000);
 
-    } catch  {
+    } catch {
       toast.error("Failed to copy to clipboard");
     }
   };
@@ -86,19 +104,15 @@ const PasswordGenerator = () => {
       return;
     }
 
+    setIsSaving(true);
     try {
       // Get or create encryption key
       const key = localStorage.getItem("vaultKey");
-      if (!key ) {
+      if (!key) {
         toast.error("No encryption key found. Please log in again.");
         return;
       }
 
-      console.log('PasswordGenerator - Saving with key:', {
-        keyLength: key?.length,
-        key: key?.substring(0, 10) + '...'
-      });
-      // FIXED: Add await since encryptData is now async
       const encrypted = await encryptData(password, key);
 
       const res = await fetch("/api/vault", {
@@ -122,169 +136,191 @@ const PasswordGenerator = () => {
 
       toast.success("Password saved to Vault!");
       setIsModalOpen(false);
+      // Reset form states
       setVaultTitle("New Password");
       setVaultUsername("");
       setVaultUrl("");
       setVaultNotes("");
     } catch (err: unknown) {
-
-      const errorMessage = err instanceof Error?err.message:String(err)
+      const errorMessage = err instanceof Error ? err.message : String(err)
       console.error("Save to vault error:", errorMessage);
       toast.error(errorMessage || "Error saving password")
+    } finally {
+      setIsSaving(false);
     }
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 dark:bg-gray-800  bg-white shadow-md rounded-2xl p-6 text-center">
-      <h2 className="text-xl font-bold mb-4">🔐 Password Generator</h2>
+    <Card className="mx-auto mt-8 max-w-lg shadow-xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-2xl font-bold text-primary">
+          <Wand2 className="h-6 w-6" /> Password Generator
+        </CardTitle>
+        <CardDescription>
+          Create strong, unique passwords based on your criteria.
+        </CardDescription>
+      </CardHeader>
 
-      <div className="flex flex-col gap-3 text-left">
-        <label className="flex justify-between">
-          <span>Length: {length}</span>
-          <input
-            type="range"
-            min="6"
-            max="32"
-            value={length}
-            onChange={(e) => setLength(Number(e.target.value))}
-            className="w-1/2"
+      <CardContent className="space-y-6">
+
+        {/* 1. Password Display */}
+        <div className="flex w-full items-center space-x-2 rounded-lg border bg-muted p-3">
+          <Input
+            type="text"
+            value={password}
+            readOnly
+            className="flex-1 border-none bg-transparent font-mono text-lg font-bold tracking-widest focus-visible:ring-0"
+            placeholder="Click Generate"
           />
-        </label>
+          <Button onClick={copyToClipboard} size="icon" variant="ghost" disabled={!password}>
+            <Copy className="h-5 w-5" />
+          </Button>
+          <Button onClick={() => setIsModalOpen(true)} size="icon" variant="ghost" disabled={!password}>
+            <Save className="h-5 w-5" />
+          </Button>
+        </div>
 
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={includeUppercase}
-            onChange={(e) => setIncludeUppercase(e.target.checked)}
-          />
-          Include Uppercase (A–Z)
-        </label>
 
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={includeLowercase}
-            onChange={(e) => setIncludeLowercase(e.target.checked)}
-          />
-          Include Lowercase (a–z)
-        </label>
-
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={includeNumbers}
-            onChange={(e) => setIncludeNumbers(e.target.checked)}
-          />
-          Include Numbers (0–9)
-        </label>
-
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={includeSymbols}
-            onChange={(e) => setIncludeSymbols(e.target.checked)}
-          />
-          Include Symbols (!@#...)
-        </label>
-      </div>
-
-      <button
-        onClick={generatePassword}
-        className="w-full mt-5 cursor-pointer bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-      >
-        Generate Password
-      </button>
-
-      {password && (
-        <div className="mt-4 space-y-2">
-          <div className="flex justify-between items-center border p-2 rounded-lg">
-            <span className="truncate font-mono">{password}</span>
-            <button
-              onClick={copyToClipboard}
-              className="text-blue-500 hover:underline cursor-pointer ml-2"
-            >
-              Copy
-            </button>
+        {/* 2. Controls */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="length-slider" className="flex justify-between font-semibold">
+              <span>Password Length</span>
+              <span className="text-primary text-xl font-mono">{length}</span>
+            </Label>
+            <Slider
+              id="length-slider"
+              min={6}
+              max={32}
+              step={1}
+              value={[length]}
+              onValueChange={(val) => setLength(val[0])}
+              // UPDATED: Changed slider track and thumb colors for better visibility
+              className="[&>span:first-child]:h-2 [&>span:first-child]:bg-blue-200 dark:[&>span:first-child]:bg-primary/20 [&>span:nth-child(3)]:bg-blue-600 dark:[&>span:nth-child(3)]:bg-primary"
+            />
           </div>
 
-          {password &&
-            <button
-              onClick={() => setIsModalOpen(!isModalOpen)}
-              className="w-full mt-2 cursor-pointer bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Save in Vault
-            </button>
-          }
-
-          {isModalOpen && (
-            <div className="fixed inset-0 bg-black/70 dark:bg-black/10 flex justify-center items-center z-50">
-              <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-80 shadow-lg">
-                <h3 className="text-lg font-bold mb-4">Save Password to Vault</h3>
-
-                <form noValidate onSubmit={handleSaveToVault} className="flex flex-col gap-3">
-                  <input
-                    type="text"
-                    placeholder="Title"
-                    value={vaultTitle}
-                    onChange={(e) => setVaultTitle(e.target.value)}
-                    className="border dark:bg-gray-700 p-2 rounded"
-                    required
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Username (optional)"
-                    value={vaultUsername}
-                    onChange={(e) => setVaultUsername(e.target.value)}
-                    className="border dark:bg-gray-700 p-2 rounded"
-                  />
-
-                  <input
-                    type="url"
-                    placeholder="URL (optional)"
-                    value={vaultUrl}
-                    onChange={(e) => setVaultUrl(e.target.value)}
-                    className="border dark:bg-gray-700 p-2 rounded"
-                  />
-
-                  <textarea
-                    placeholder="Notes (optional)"
-                    value={vaultNotes}
-                    onChange={(e) => setVaultNotes(e.target.value)}
-                    className="border dark:bg-gray-700 p-2 rounded"
-                  />
-
-                  <input
-                    type="text"
-                    value={password} // pre-filled password
-                    readOnly
-                    className="border dark:bg-gray-700 p-2 rounded font-mono"
-                  />
-
-                  <div className="flex justify-end gap-2 mt-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="px-3 py-1 rounded bg-gray-300 dark:bg-gray-700 hover:bg-gray-400"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
+          <div className="grid grid-cols-2 gap-y-3">
+            {/* Checkbox Group */}
+            {[
+              { label: "Include Uppercase (A-Z)", state: includeUppercase, setState: setIncludeUppercase },
+              { label: "Include Lowercase (a-z)", state: includeLowercase, setState: setIncludeLowercase },
+              { label: "Include Numbers (0-9)", state: includeNumbers, setState: setIncludeNumbers },
+              { label: "Include Symbols (!@#...)", state: includeSymbols, setState: setIncludeSymbols },
+            ].map((option) => (
+              <div key={option.label} className="flex items-center space-x-2">
+                <Checkbox
+                  id={option.label}
+                  checked={option.state}
+                  onCheckedChange={(checked) => option.setState(checked === true)}
+                />
+                <label
+                  htmlFor={option.label}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {option.label}
+                </label>
               </div>
-            </div>
-          )}
-
-
+            ))}
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* 3. Generate Button */}
+        <Button
+          onClick={generatePassword}
+          className="w-full text-lg h-12"
+        >
+          <Wand2 className="mr-2 h-5 w-5" /> Re-Generate Password
+        </Button>
+      </CardContent>
+
+      {/* Save to Vault Modal (Dialog Component) */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="bg-white dark:bg-black sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Lock className="h-5 w-5" /> Save to Vault
+            </DialogTitle>
+            <DialogDescription>
+              Enter the context for this new password before encrypting it.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form noValidate onSubmit={handleSaveToVault} className="grid gap-4 py-4">
+
+            <div className="space-y-1">
+              <Label htmlFor="vault-title">Title *</Label>
+              <Input
+                id="vault-title"
+                placeholder="e.g., Google Account"
+                value={vaultTitle}
+                onChange={(e) => setVaultTitle(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="vault-username">Username</Label>
+              <Input
+                id="vault-username"
+                placeholder="e.g., your.email@example.com"
+                value={vaultUsername}
+                onChange={(e) => setVaultUsername(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="vault-url">URL</Label>
+              <Input
+                id="vault-url"
+                type="url"
+                placeholder="https://example.com"
+                value={vaultUrl}
+                onChange={(e) => setVaultUrl(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="vault-notes">Notes</Label>
+              <Textarea
+                id="vault-notes"
+                placeholder="Any special instructions or recovery info."
+                value={vaultNotes}
+                onChange={(e) => setVaultNotes(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="vault-password">Password (Generated)</Label>
+              <Input
+                id="vault-password"
+                value={password}
+                readOnly
+                className="font-mono dark:bg-gray-900  bg-muted-foreground/10"
+              />
+            </div>
+
+            <DialogFooter className="mt-4 flex flex-row justify-end space-x-2">
+              <Button type="button" className="bg-red-400" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
+                <X className="mr-2 h-4 w-4" /> Cancel
+              </Button>
+              <Button type="submit" className="bg-green-400" disabled={isSaving || !vaultTitle}>
+                {isSaving ? (
+                  <>
+                    <Wand2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" /> Encrypt & Save
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 };
 
