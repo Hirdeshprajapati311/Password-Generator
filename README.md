@@ -1,6 +1,7 @@
 # 🛡️ PassVault
 
 A modern, encrypted password manager and generator built with **Next.js**, **Tailwind CSS**, **ShadCN**, **MongoDB**, and **AES-GCM encryption**.
+
 <img width="1024" height="915" alt="passvault" src="https://github.com/user-attachments/assets/87c5befb-f1c9-4bd0-a6d0-624d0cfa51d1" />
 
 
