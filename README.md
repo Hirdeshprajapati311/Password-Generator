@@ -59,17 +59,10 @@ Built for **recruiters and developers** to showcase:
 
 ## 🖼️ Screenshots
 
-(Add your screenshots here later, for example:)
-
 | Light Mode | Dark Mode |
 |-------------|------------|
-| ![Light UI](<img width="1916" height="887" alt="Screenshot 2025-10-12 105455" src="https://github.com/user-attachments/assets/4e54cf56-5fe9-49cd-9fdb-1a6e525cf7a8" />
-) (<img width="1918" height="881" alt="Screenshot 2025-10-12 105615" src="https://github.com/user-attachments/assets/a55e8497-feb1-476a-82c2-4c6edfc4e173" />
-) (<img width="1918" height="880" alt="Screenshot 2025-10-12 105744" src="https://github.com/user-attachments/assets/a90c0b40-1565-4095-bd86-e93683924c8b" />
-) | ![Dark UI](<img width="1913" height="892" alt="Screenshot 2025-10-12 105118" src="https://github.com/user-attachments/assets/658d3a12-cc3c-467c-9160-79229155c2b9" />
-) (<img width="1918" height="878" alt="Screenshot 2025-10-12 105820" src="https://github.com/user-attachments/assets/d5fdc9b2-749e-4ec7-a289-a6e1765393cc" />
-) (<img width="1918" height="883" alt="Screenshot 2025-10-12 105659" src="https://github.com/user-attachments/assets/2bf95cdb-cfe7-4937-8fe9-f15cec0b7886" />
-)|
+| <img width="1916" height="887" alt="Screenshot 2025-10-12 105455" src="https://github.com/user-attachments/assets/4e54cf56-5fe9-49cd-9fdb-1a6e525cf7a8" /> <br> <img width="1918" height="881" alt="Screenshot 2025-10-12 105615" src="https://github.com/user-attachments/assets/a55e8497-feb1-476a-82c2-4c6edfc4e173" /> <br> <img width="1918" height="880" alt="Screenshot 2025-10-12 105744" src="https://github.com/user-attachments/assets/a90c0b40-1565-4095-bd86-e93683924c8b" /> | <img width="1913" height="892" alt="Screenshot 2025-10-12 105118" src="https://github.com/user-attachments/assets/658d3a12-cc3c-467c-9160-79229155c2b9" /> <br> <img width="1918" height="878" alt="Screenshot 2025-10-12 105820" src="https://github.com/user-attachments/assets/d5fdc9b2-749e-4ec7-a289-a6e1765393cc" /> <br> <img width="1918" height="883" alt="Screenshot 2025-10-12 105659" src="https://github.com/user-attachments/assets/2bf95cdb-cfe7-4937-8fe9-f15cec0b7886" /> |
+
 
 ---
 
