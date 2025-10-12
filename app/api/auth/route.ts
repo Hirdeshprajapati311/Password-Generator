@@ -12,6 +12,7 @@ export async function POST(req: Request) {
     console.log("📦 Request body:", { 
       email , 
       action,
+      username,
       password,
       encryptedMasterKey 
     });
