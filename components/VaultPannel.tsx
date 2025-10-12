@@ -36,7 +36,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
     setMounted(true)
   }, [])
 
-  // Precompute revealed items for better performance
+  // Precomputing revealed items for better performance
   const revealedItems = useMemo(() => {
     return items.filter(item => revealed[item._id]);
   }, [items, revealed]);
@@ -57,14 +57,13 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
     });
   }, [items]);
 
-  // Fetch vault only after component is mounted
+  // Fetching vault only after component is mounted
   useEffect(() => {
     if (mounted) {
       fetchVault()
     }
   }, [fetchVault, mounted])
 
-  // --- LOGIC PRESERVED: toggleReveal ---
   const toggleReveal = useCallback(async (item: VaultItem) => {
     const itemId = item._id;
 
@@ -110,7 +109,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
 
   const handleDelete = useCallback((id: string, title: string) => {
     if (confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
-      // Clear from cache when deleting
+      // Clearing from cache when deleting
       decryptionCache.delete(id);
       deleteItem(id);
       toast.success(`Item "${title}" deleted.`);
@@ -118,9 +117,9 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
   }, [deleteItem]);
 
   const handleEdit = useCallback(async (item: VaultItem) => {
-    setEditingItem(null); // Close any existing edit form before processing new one
+    setEditingItem(null); // Closeing any existing edit form before processing new one
     try {
-      // Decrypt the password for editing
+      // Decrypting the password for editing
       let password = '';
       if (decryptionCache.has(item._id)) {
         password = decryptionCache.get(item._id)!;
@@ -138,7 +137,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
         notes: item.notes || '',
         password: password
       });
-      setShowEditPassword(false); // Reset password visibility for modal
+      setShowEditPassword(false); // Reseting password visibility for modal
       setLoading(prev => ({ ...prev, [item._id]: false }));
     } catch (err) {
       console.error("Failed to decrypt for editing:", err);
@@ -153,11 +152,11 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
     try {
       setLoading(prev => ({ ...prev, [editingItem._id]: true }));
 
-      // Re-encrypt the password if it was changed
+      // Re-encrypting the password if it was changed
       let encrypted = editingItem.encrypted;
       if (editForm.password !== decryptionCache.get(editingItem._id)) {
         encrypted = await encryptData(editForm.password, masterKey);
-        // Update cache with new password
+        // Updateing cache with new password
         decryptionCache.set(editingItem._id, editForm.password);
       }
 
@@ -200,7 +199,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
       try {
         const itemsToDecrypt = items.filter(item => !decryptionCache.has(item._id));
 
-        // Decrypt in batches for better performance
+        // Decrypting in batches for better performance
         const batchSize = 3;
         for (let i = 0; i < itemsToDecrypt.length; i += batchSize) {
           const batch = itemsToDecrypt.slice(i, i + batchSize);
@@ -217,7 +216,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
           );
         }
 
-        // Reveal all items
+        // Revealing all items
         const allRevealed = items.reduce((acc, item) => {
           acc[item._id] = true;
           return acc;
@@ -241,7 +240,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
     const cachedPassword = decryptionCache.get(item._id);
 
     return (
-      <Card key={item._id} className="shadow-md transition-shadow hover:shadow-lg dark:border-gray-700">
+      <Card key={item._id} className=" shadow-md transition-shadow hover:shadow-lg dark:border-white border border-black">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <Bookmark className="h-5 w-5 text-primary" /> {item.title}
@@ -470,7 +469,7 @@ const VaultPannel = ({ masterKey }: { masterKey: string }) => {
             <Button
               onClick={handleSaveEdit}
               disabled={loading[editingItem?._id || ''] || !editForm.title || !editForm.password}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-500 hover:bg-green-700"
             >
               {loading[editingItem?._id || ''] ? (
                 <Loader2 size={18} className="mr-2 animate-spin" />

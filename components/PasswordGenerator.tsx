@@ -151,7 +151,7 @@ const PasswordGenerator = () => {
   }
 
   return (
-    <Card className="mx-auto mt-8 max-w-lg shadow-xl">
+    <Card className="mx-auto mt-8 max-w-lg shadow-xl border-black dark:border-white">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-2xl font-bold text-primary">
           <Wand2 className="h-6 w-6" /> Password Generator
@@ -164,7 +164,7 @@ const PasswordGenerator = () => {
       <CardContent className="space-y-6">
 
         {/* 1. Password Display */}
-        <div className="flex w-full items-center space-x-2 rounded-lg border bg-muted p-3">
+        <div className="flex w-full items-center space-x-2 rounded-lg border border-black dark:border-white bg-muted p-3">
           <Input
             type="text"
             value={password}
@@ -172,10 +172,10 @@ const PasswordGenerator = () => {
             className="flex-1 border-none bg-transparent font-mono text-lg font-bold tracking-widest focus-visible:ring-0"
             placeholder="Click Generate"
           />
-          <Button onClick={copyToClipboard} size="icon" variant="ghost" disabled={!password}>
+          <Button onClick={copyToClipboard} size="icon" className="bg-blue-400" variant="ghost" disabled={!password}>
             <Copy className="h-5 w-5" />
           </Button>
-          <Button onClick={() => setIsModalOpen(true)} size="icon" variant="ghost" disabled={!password}>
+          <Button onClick={() => setIsModalOpen(true)} size="icon" variant="ghost" disabled={!password} className="bg-green-400">
             <Save className="h-5 w-5" />
           </Button>
         </div>
@@ -195,7 +195,6 @@ const PasswordGenerator = () => {
               step={1}
               value={[length]}
               onValueChange={(val) => setLength(val[0])}
-              // UPDATED: Changed slider track and thumb colors for better visibility
               className="[&>span:first-child]:h-2 [&>span:first-child]:bg-blue-200 dark:[&>span:first-child]:bg-primary/20 [&>span:nth-child(3)]:bg-blue-600 dark:[&>span:nth-child(3)]:bg-primary"
             />
           </div>
@@ -228,9 +227,9 @@ const PasswordGenerator = () => {
         {/* 3. Generate Button */}
         <Button
           onClick={generatePassword}
-          className="w-full text-lg h-12"
+          className="w-full bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 text-lg h-12"
         >
-          <Wand2 className="mr-2 h-5 w-5" /> Re-Generate Password
+          <Wand2 className="text-white mr-2 h-5 w-5" /> Re-Generate Password
         </Button>
       </CardContent>
 

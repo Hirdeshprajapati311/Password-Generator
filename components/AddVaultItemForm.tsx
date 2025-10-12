@@ -25,8 +25,7 @@ export const AddVaultItemForm = ({ masterKey, onFormSubmit }: AddVaultItemFormPr
   const [notes, setNotes] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Added for loading state
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -47,23 +46,17 @@ export const AddVaultItemForm = ({ masterKey, onFormSubmit }: AddVaultItemFormPr
       });
 
       if (!res.ok) {
-        // Handle specific errors if available from API, otherwise a generic one
         const data = await res.json();
         throw new Error(data.error || 'Failed to add item to vault');
       }
 
       toast.success("Vault item added successfully! 🎉")
-
       fetchVault();
-
-      // Clear form
       setTitle('');
       setUsername('');
       setUrl('');
       setNotes('');
       setPassword('');
-
-      // Call parent submit handler if provided (e.g., to close a dialog)
       if (onFormSubmit) {
         onFormSubmit();
       }
@@ -79,8 +72,7 @@ export const AddVaultItemForm = ({ masterKey, onFormSubmit }: AddVaultItemFormPr
 
 
   return (
-    // Replaced generic div/form with Card component
-    <Card className="w-full bg-white dark:bg-black max-w-lg mx-auto shadow-lg">
+    <Card className="w-full border border-black dark:border-white bg-white dark:bg-black max-w-lg mx-auto shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl font-bold text-primary">
           <PlusCircle className="h-5 w-5" /> Add New Vault Item
@@ -185,7 +177,7 @@ export const AddVaultItemForm = ({ masterKey, onFormSubmit }: AddVaultItemFormPr
 
           <Button
             type="submit"
-            className="w-full h-10 mt-6"
+            className="w-full bg-blue-500 h-10 mt-6"
             disabled={isSubmitting || !title || !password} // Disable if no title/password
           >
             {isSubmitting ? (

@@ -3,19 +3,19 @@ import { decryptData } from '@/lib/crypto';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-
-// Import necessary shadcn components and icons
+import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { KeyRound, LogIn, Mail, Lock as LockIcon, Loader2 } from 'lucide-react'; // Renamed Lock to LockIcon to avoid conflict
+import { KeyRound, LogIn, Mail, Lock as LockIcon, Loader2 } from 'lucide-react'; 
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('');
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
+  const [isLoading, setIsLoading] = useState(false); 
+  const { setUsername, setUserEmail } = useAuthStore();
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +24,6 @@ const LoginPage = () => {
     setIsLoading(true); // Start loading
 
     try {
-      console.log("🔐 Attempting login for:", email);
 
       const res = await fetch("/api/auth", {
         method: "POST",
@@ -39,16 +38,16 @@ const LoginPage = () => {
       });
 
       const userData = await res.json();
-      console.log("📥 Login API response:", userData);
 
       if (res.ok && userData.success) {
 
         try {
-          // ✅ Parse the stringified encrypted master key first
           const encryptedMasterKey = JSON.parse(userData.encryptedMasterKey);
 
           const masterKey = await decryptData(encryptedMasterKey, password);
           localStorage.setItem('vaultKey', masterKey);
+          setUsername(userData.username);
+          setUserEmail(userData.email);
           toast.success("Login successful");
           router.push("/vault");
         } catch (decryptError) {
@@ -57,7 +56,6 @@ const LoginPage = () => {
           toast.error("Login failed - decryption error");
         }
       } else {
-        // ✅ Handle failed login
         setError(userData.error || "Login failed");
         toast.error(userData.error || "Login failed");
       }
@@ -66,15 +64,13 @@ const LoginPage = () => {
       setError("Server error");
       toast.error("Unable to login");
     } finally {
-      setIsLoading(false); // Stop loading regardless of outcome
+      setIsLoading(false); 
     }
   }
 
   return (
-    // UPDATED: Added a subtle background texture for the entire page
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 p-4">
 
-      {/* UPDATED: Use Card component for a clean, contained form */}
       <Card className="w-full max-w-sm shadow-2xl border border-primary/20 bg-card/80 backdrop-blur-md">
         <CardHeader className="space-y-1 text-center">
           <KeyRound className="h-10 w-10 text-primary mx-auto mb-2" />
@@ -125,7 +121,7 @@ const LoginPage = () => {
             {error && <p className="text-sm text-center font-medium text-red-500">{error}</p>}
 
             {/* Submit Button */}
-            <Button type="submit" className="w-full mt-2 h-10" disabled={isLoading}>
+            <Button type="submit" className="bg-zinc-500 text-white dark:border-white border w-full mt-2 h-10" disabled={isLoading}>
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

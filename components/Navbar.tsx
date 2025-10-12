@@ -8,7 +8,6 @@ import { ModeToggle } from './ModeToggleButton';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Spinner } from './ui/spinner';
 import { LogOut, Vault, Wand2, Menu, Shield } from 'lucide-react';
 
 const items = [
@@ -29,15 +28,7 @@ const Navbar = () => {
   const router = useRouter();
 
   useAuthSync();
-  const { setUserId, isLoading } = useAuthStore()
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-16 border-b bg-background/95 backdrop-blur-sm">
-        <Spinner />
-      </div>
-    );
-  }
+  const { setUserId } = useAuthStore()
 
   const handleLogout = async () => {
     if (confirm("Are you sure you want to logout?")) {
@@ -53,7 +44,7 @@ const Navbar = () => {
       <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
         {/* Left Section: Logo and Navigation */}
-        <div className="flex ml-40 items-center space-x-6">
+        <div className="flex ml-6  lg:ml-40 items-center space-x-6">
           {/* Logo */}
           <Link href="/vault" className="flex items-center space-x-2 group">
             <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-lg">
@@ -110,7 +101,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu */}
-          <div className="sm:hidden flex items-center space-x-2">
+          <div className="sm:hidden flex items-center space-x-2 ">
             <ModeToggle />
 
             <Sheet>
@@ -120,10 +111,10 @@ const Navbar = () => {
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[340px]">
+              <SheetContent side="right" className="w-[280px] bg-white dark:bg-black  sm:w-[340px]">
                 <div className="flex flex-col h-full">
                   {/* Header */}
-                  <div className="flex items-center space-x-2 pb-6 border-b">
+                  <div className="flex items-center space-x-2 p-6 border-b">
                     <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
                       <Shield className="h-5 w-5 text-white" />
                     </div>
@@ -133,7 +124,7 @@ const Navbar = () => {
                   </div>
 
                   {/* Navigation */}
-                  <nav className="flex-1 space-y-3 py-6">
+                  <nav className="flex-1 space-y-3 py-6 px-2">
                     {items.map((item) => {
                       const isActive = pathname === item.path;
                       const Icon = item.icon;
@@ -157,7 +148,7 @@ const Navbar = () => {
                   </nav>
 
                   {/* Footer Actions */}
-                  <div className="space-y-4 pt-6 border-t">
+                  <div className="space-y-4 p-6 border-t">
                     <Button
                       onClick={handleLogout}
                       variant="outline"
@@ -167,7 +158,7 @@ const Navbar = () => {
                       <span className="font-medium">Logout</span>
                     </Button>
 
-                    <div className="text-xs text-center text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-center items-center text-gray-500 dark:text-gray-400">
                       Secure Password Manager
                     </div>
                   </div>

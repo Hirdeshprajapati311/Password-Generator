@@ -1,25 +1,18 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-
-// Shadcn UI & Lucide Icons
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, UserCircle2, Shield } from 'lucide-react';
-import { Separator } from '@/components/ui/separator'; // Import Separator for better structure
-
-// Your Components
 import { AddVaultItemForm } from '@/components/AddVaultItemForm';
 import VaultPannel from '@/components/VaultPannel';
 import { useAuthStore } from '@/store/useAuthStore';
+import { Separator } from '@/components/ui/separator';
 
 const VaultPage = () => {
-  // --- LOGIC PRESERVED: State declarations ---
   const [masterKey, setMasterKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { userEmail } = useAuthStore();
+  const { userEmail, username } = useAuthStore();
 
-  // --- LOGIC PRESERVED: useEffect for key retrieval ---
   useEffect(() => {
-    // A slight delay can prevent UI flicker on fast connections
     const timer = setTimeout(() => {
       try {
         const key = localStorage.getItem('vaultKey');
@@ -37,9 +30,7 @@ const VaultPage = () => {
 
     return () => clearTimeout(timer);
   }, []);
-  // --- END LOGIC PRESERVED ---
 
-  // --- Loading State ---
   if (!masterKey && !error) {
     return (
       <div className="flex h-[calc(100vh-80px)] items-center justify-center">
@@ -49,7 +40,6 @@ const VaultPage = () => {
     );
   }
 
-  // --- Error State ---
   if (error) {
     return (
       <div className="flex h-[calc(100vh-80px)] items-center justify-center p-4">
@@ -62,12 +52,11 @@ const VaultPage = () => {
     );
   }
 
-  // --- Main Content ---
   return (
     <div className="container mx-auto max-w-6xl p-4 py-10 sm:p-6 lg:p-10">
 
       {/* 1. Header Section (Enhanced Visuals) */}
-      <header className="mb-10 flex flex-col items-start justify-between gap-4 border-b pb-6 sm:flex-row sm:items-center">
+      <header className="mb-4 flex flex-col items-start justify-between gap-4 border-b pb-6 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
           <Shield className="h-8 w-8 text-primary" />
           <div>
@@ -76,16 +65,19 @@ const VaultPage = () => {
           </div>
         </div>
         {userEmail && (
-          <div className="flex items-center gap-2 rounded-full border bg-muted px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm">
+          <div className="flex border-black dark:border-white items-center gap-2 rounded-full border bg-muted px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm">
             <UserCircle2 className="h-4 w-4" />
             <span className="truncate">{userEmail}</span>
           </div>
         )}
+
       </header>
+      <div className='mb-2 ml-1 text-xl dark:text-white underline font-serif'>Hello! <span className='font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 '>{username || "User"}</span></div>
+
 
       {/* 2. Main Content Area - Split Layout for visual distinction */}
       <main className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_2fr]">
-        
+
         {/* Left Column: Add Item Form */}
         <div className="lg:sticky lg:top-8 lg:h-fit">
           {/* AddVaultItemForm is expected to be a Card, making it stand out here */}
@@ -93,12 +85,12 @@ const VaultPage = () => {
         </div>
 
         {/* Right Column: Vault List Panel */}
-        <div className='bg-white border-2 dark:border-white  dark:bg-black p-4 rounded-xl'>
-          <h2 className="mb-4 text-2xl font-semibold tracking-tight text-primary">All Credentials</h2>
+        <div className='bg-white border-2 dark:border-white border-black  dark:bg-black p-4 rounded-xl'>
+          <h2 className="mb-4 text-2xl font-semibold tracking-tight text-primary">Manage Credentials</h2>
           <Separator className="mb-6" />
           <VaultPannel masterKey={masterKey!} />
         </div>
-        
+
       </main>
     </div>
   );

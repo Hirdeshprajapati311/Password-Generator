@@ -6,10 +6,8 @@ import { signToken } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
-    console.log("Auth request received");
     await connectDB();
-    console.log("Connected to database");
-    const { email, password, action, encryptedMasterKey } = await req.json();
+    const { email, password, action,username, encryptedMasterKey } = await req.json();
 
     console.log("📦 Request body:", { 
       email , 
@@ -18,25 +16,22 @@ export async function POST(req: Request) {
       encryptedMasterKey 
     });
 
-    if (!email || !password || !action) {
+    if (!email || !password || !action  ) {
       console.log("Missing required fields");
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     if (action === "signup") {
-      console.log("Signup attempt for", email);
-      const existing = await User.findOne({ email });
+      const existing = await User.findOne({$or:[{email},{username}]  });
       if (existing) {
-        console.log("User already exists");
-        return NextResponse.json({ok:false, error: "User already exists" }, { status: 400 });
+        const field = existing.email === email ? "email" : "username";
+        return NextResponse.json({ok:false, error: `This ${field} already exists` }, { status: 400 });
       }
 
       if (!encryptedMasterKey) {
-        console.log("Missing encrypted master key");
         return NextResponse.json({ok:false, error: "Missing encrypted master key" }, { status: 400 });
       }
 
-      console.log("Generating password hash...");
       
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(password, salt);
@@ -44,6 +39,7 @@ export async function POST(req: Request) {
 
       const user = await User.create({
         email,
+        username,
         password: hash,
         salt,
         encryptedMasterKey:JSON.stringify(encryptedMasterKey)
@@ -79,7 +75,7 @@ export async function POST(req: Request) {
       }
 
       const token = signToken(user._id.toString());
-      const res = NextResponse.json({ success: true, userId: user._id, encryptedMasterKey: user.encryptedMasterKey });
+      const res = NextResponse.json({ success: true, userId: user._id,username:user.username, encryptedMasterKey: user.encryptedMasterKey });
 
       res.cookies.set("token", token, {
         httpOnly: true,
